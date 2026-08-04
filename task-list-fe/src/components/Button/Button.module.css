@@ -16,9 +16,42 @@
   cursor: pointer;
 }
 
+.default {
+  color: var(--text-strong);
+  background: var(--surface-muted);
+}
+
+.primary {
+  border-color: var(--accent);
+  color: #ffffff;
+  background: var(--accent);
+}
+
+.danger {
+  border-color: var(--danger-border);
+  color: var(--danger);
+  background: var(--danger-bg);
+}
+
+.subtle {
+  color: var(--text);
+  background: var(--surface);
+}
+
 .button:hover:not(:disabled) {
   border-color: var(--accent);
   background: var(--surface);
+}
+
+.primary:hover:not(:disabled) {
+  border-color: var(--accent);
+  color: #ffffff;
+  background: #0747a6;
+}
+
+.danger:hover:not(:disabled) {
+  border-color: var(--danger);
+  background: #ffd5cc;
 }
 
 .button:disabled {

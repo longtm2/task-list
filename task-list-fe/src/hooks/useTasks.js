@@ -1,24 +1,51 @@
 import { useCallback, useEffect, useState } from 'react'
-import { AxiosError, CanceledError } from 'axios'
+import { CanceledError } from 'axios'
 import { getTasks } from '../services/tasksService'
+import { resolveApiErrorMessage } from '../utils/apiErrors'
 
-function resolveErrorMessage(error) {
-  if (error instanceof AxiosError && error.response) {
-    return `Task API returned ${error.response.status}`
-  }
-
-  if (error instanceof Error) {
-    return error.message
-  }
-
-  return 'Unable to load tasks'
+const DEFAULT_PAGINATION = {
+  has_next: false,
+  has_previous: false,
+  page: 1,
+  per_page: 10,
+  total_count: 0,
+  total_pages: 0,
 }
 
-export function useTasks({ dueByToday }) {
+export function useTasks({ dueByToday, page, perPage }) {
   const [tasks, setTasks] = useState([])
+  const [pagination, setPagination] = useState(DEFAULT_PAGINATION)
   const [requestState, setRequestState] = useState('loading')
   const [errorMessage, setErrorMessage] = useState('')
   const [reloadToken, setReloadToken] = useState(0)
+
+  const loadTasks = useCallback(
+    async ({ signal, silent = false } = {}) => {
+      if (!silent) setRequestState('loading')
+      setErrorMessage('')
+
+      try {
+        const loadedTasks = await getTasks({
+          dueByToday,
+          page,
+          perPage,
+          signal,
+        })
+
+        setTasks(loadedTasks.tasks)
+        setPagination(loadedTasks.pagination)
+        setRequestState('success')
+      } catch (error) {
+        if (error instanceof CanceledError || error?.name === 'AbortError') return
+
+        setTasks([])
+        setPagination(DEFAULT_PAGINATION)
+        setErrorMessage(resolveApiErrorMessage(error, 'Unable to load tasks'))
+        setRequestState('error')
+      }
+    },
+    [dueByToday, page, perPage],
+  )
 
   const reload = useCallback(() => {
     setReloadToken((current) => current + 1)
@@ -26,35 +53,14 @@ export function useTasks({ dueByToday }) {
 
   useEffect(() => {
     const controller = new AbortController()
-
-    async function loadTasks() {
-      setRequestState('loading')
-      setErrorMessage('')
-
-      try {
-        const loadedTasks = await getTasks({
-          dueByToday,
-          signal: controller.signal,
-        })
-
-        setTasks(loadedTasks)
-        setRequestState('success')
-      } catch (error) {
-        if (error instanceof CanceledError || error?.name === 'AbortError') return
-
-        setTasks([])
-        setErrorMessage(resolveErrorMessage(error))
-        setRequestState('error')
-      }
-    }
-
-    loadTasks()
+    Promise.resolve().then(() => loadTasks({ signal: controller.signal }))
 
     return () => controller.abort()
-  }, [dueByToday, reloadToken])
+  }, [loadTasks, reloadToken])
 
   return {
     errorMessage,
+    pagination,
     reload,
     requestState,
     tasks,

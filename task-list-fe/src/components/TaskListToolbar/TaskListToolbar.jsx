@@ -1,7 +1,13 @@
 import Button from '../Button/Button'
 import styles from './TaskListToolbar.module.css'
 
-export default function TaskListToolbar({ dueByToday, isLoading, onDueByTodayChange, onRefresh }) {
+export default function TaskListToolbar({
+  dueByToday,
+  isLoading,
+  onDueByTodayChange,
+  onNewTask,
+  onRefresh,
+}) {
   return (
     <section className={styles.toolbar} aria-label="Task list controls">
       <label className={styles.filterToggle}>
@@ -12,9 +18,14 @@ export default function TaskListToolbar({ dueByToday, isLoading, onDueByTodayCha
         />
         <span>Due by today</span>
       </label>
-      <Button type="button" disabled={isLoading} onClick={onRefresh}>
-        Refresh
-      </Button>
+      <div className={styles.actions}>
+        <Button type="button" variant="primary" onClick={onNewTask}>
+          New task
+        </Button>
+        <Button type="button" disabled={isLoading} onClick={onRefresh}>
+          Refresh
+        </Button>
+      </div>
     </section>
   )
 }

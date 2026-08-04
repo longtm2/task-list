@@ -25,7 +25,27 @@ module Api
           Task.for_list(due_by_today: declared(params, include_missing: false)[:due_by_today])
         end
 
+        def paginated_tasks_collection
+          tasks = paginate(tasks_collection)
+
+          {
+            tasks:,
+            pagination: pagination_metadata(tasks)
+          }
+        end
+
         private
+
+        def pagination_metadata(tasks)
+          {
+            page: tasks.current_page,
+            per_page: tasks.limit_value,
+            total_count: tasks.total_count,
+            total_pages: tasks.total_pages,
+            has_next: tasks.next_page.present?,
+            has_previous: tasks.prev_page.present?
+          }
+        end
 
         def permitted_task_params(attributes)
           task_attributes.slice(*attributes)

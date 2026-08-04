@@ -1,0 +1,55 @@
+.form {
+  display: grid;
+  gap: 12px;
+}
+
+.field {
+  display: grid;
+  gap: 5px;
+  color: var(--text-strong);
+  font-weight: 700;
+}
+
+.field input,
+.field textarea {
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  color: var(--text);
+  background: var(--surface);
+  font: inherit;
+  font-weight: 400;
+}
+
+.field input {
+  min-height: 32px;
+  padding: 0 9px;
+}
+
+.field textarea {
+  min-height: 160px;
+  padding: 8px 9px;
+  resize: vertical;
+}
+
+.field input:focus,
+.field textarea:focus {
+  border-color: var(--accent);
+  outline: 2px solid var(--info-bg);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.formError {
+  margin: 0;
+  padding: 8px 10px;
+  border: 1px solid var(--danger-border);
+  border-radius: 3px;
+  color: var(--danger);
+  background: var(--danger-bg);
+  font-weight: 600;
+}

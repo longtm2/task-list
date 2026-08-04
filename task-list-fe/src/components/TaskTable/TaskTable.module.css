@@ -33,15 +33,32 @@
   background: var(--row-hover);
 }
 
+.selectedRow {
+  background: var(--info-bg);
+}
+
 .taskTable tbody tr:last-child td {
   border-bottom: 0;
 }
 
 .taskId {
   width: 96px;
-  color: var(--link);
-  font-weight: 700;
   white-space: nowrap;
+}
+
+.taskLink {
+  display: inline;
+  padding: 0;
+  border: 0;
+  color: var(--link);
+  background: transparent;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.taskLink:hover {
+  text-decoration: underline;
 }
 
 .taskSummary {

@@ -33,9 +33,18 @@ class ApiV1TasksTest < ActionDispatch::IntegrationTest
     assert_equal "application/json", response.media_type
 
     body = JSON.parse(response.body)
-    assert_equal [ overdue_task.id, today_task.id, @task.id, future_task.id ], body.map { |task| task.fetch("id") }
-    assert_equal true, body.find { |task| task.fetch("id") == overdue_task.id }.fetch("overdue")
-    assert_equal false, body.find { |task| task.fetch("id") == today_task.id }.fetch("overdue")
+    tasks = body.fetch("tasks")
+    pagination = body.fetch("pagination")
+
+    assert_equal [ overdue_task.id, today_task.id, @task.id, future_task.id ], tasks.map { |task| task.fetch("id") }
+    assert_equal true, tasks.find { |task| task.fetch("id") == overdue_task.id }.fetch("overdue")
+    assert_equal false, tasks.find { |task| task.fetch("id") == today_task.id }.fetch("overdue")
+    assert_equal 1, pagination.fetch("page")
+    assert_equal 10, pagination.fetch("per_page")
+    assert_equal 4, pagination.fetch("total_count")
+    assert_equal 1, pagination.fetch("total_pages")
+    assert_equal false, pagination.fetch("has_next")
+    assert_equal false, pagination.fetch("has_previous")
   end
 
   test "limits listed tasks to those due by the end of today" do
@@ -55,7 +64,34 @@ class ApiV1TasksTest < ActionDispatch::IntegrationTest
     assert_response :success
 
     body = JSON.parse(response.body)
-    assert_equal [ overdue_task.id, today_task.id ], body.map { |task| task.fetch("id") }
+    assert_equal [ overdue_task.id, today_task.id ], body.fetch("tasks").map { |task| task.fetch("id") }
+    assert_equal 2, body.fetch("pagination").fetch("total_count")
+  end
+
+  test "paginates listed tasks" do
+    Task.delete_all
+    tasks = 12.times.map do |index|
+      @user.tasks.create!(
+        title: "Task #{index + 1}",
+        description: "Paginated task #{index + 1}",
+        due_at: (index + 1).hours.from_now.change(usec: 0)
+      )
+    end
+
+    get "/api/v1/tasks", params: { page: 2, per_page: 5 }
+
+    assert_response :success
+
+    body = JSON.parse(response.body)
+    pagination = body.fetch("pagination")
+
+    assert_equal tasks[5, 5].map(&:id), body.fetch("tasks").map { |task| task.fetch("id") }
+    assert_equal 2, pagination.fetch("page")
+    assert_equal 5, pagination.fetch("per_page")
+    assert_equal 12, pagination.fetch("total_count")
+    assert_equal 3, pagination.fetch("total_pages")
+    assert_equal true, pagination.fetch("has_next")
+    assert_equal true, pagination.fetch("has_previous")
   end
 
   test "opens a single task" do

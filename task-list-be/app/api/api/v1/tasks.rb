@@ -1,17 +1,20 @@
 module Api
   module V1
     class Tasks < Grape::API
+      include Grape::Kaminari
+
       helpers Api::V1::Helpers::TaskHelpers
 
       resource :tasks do
         desc "List all tasks" do
-          success Api::Entities::TaskEntity
+          success Api::Entities::TaskCollectionEntity
         end
         params do
           optional :due_by_today, type: Boolean, desc: "Only include tasks due by the end of today"
+          use :pagination, per_page: 10, max_per_page: 50
         end
         get do
-          present tasks_collection, with: Api::Entities::TaskEntity
+          present paginated_tasks_collection, with: Api::Entities::TaskCollectionEntity
         end
 
         params do

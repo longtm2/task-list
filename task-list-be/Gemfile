@@ -10,8 +10,10 @@ gem "stimulus-rails"
 gem "jbuilder"
 gem "grape"
 gem "grape-entity"
+gem "grape-kaminari", require: "grape/kaminari"
 gem "grape-swagger"
 gem "grape-swagger-entity"
+gem "kaminari-activerecord"
 gem "rswag-ui"
 
 gem "tzinfo-data", platforms: %i[ windows jruby ]
