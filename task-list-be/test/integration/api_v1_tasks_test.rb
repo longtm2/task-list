@@ -37,6 +37,32 @@ class ApiV1TasksTest < ActionDispatch::IntegrationTest
     )
   end
 
+  test "marks a task as completed" do
+    patch "/api/v1/tasks/#{@task.id}/complete"
+
+    assert_response :success
+    assert_equal "application/json", response.media_type
+
+    body = JSON.parse(response.body)
+    task = @task.reload
+
+    assert task.completed?
+    assert_equal @task.id, body.fetch("id")
+    assert_equal true, body.fetch("completed")
+    assert_equal false, body.fetch("overdue")
+    assert_equal task.completed_at.iso8601, body.fetch("completed_at")
+  end
+
+  test "returns not found when completing a missing task" do
+    patch "/api/v1/tasks/0/complete"
+
+    assert_response :not_found
+    assert_equal(
+      { "errors" => { "task" => [ "not found" ] } },
+      JSON.parse(response.body)
+    )
+  end
+
   test "creates a task" do
     due_at = 2.days.from_now.change(usec: 0)
 

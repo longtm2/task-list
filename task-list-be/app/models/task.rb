@@ -18,6 +18,8 @@ class Task < ApplicationRecord
   end
 
   def mark_completed!
+    return true if completed?
+
     update!(completed_at: Time.current)
   end
 end

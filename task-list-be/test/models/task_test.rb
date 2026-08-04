@@ -29,6 +29,33 @@ class TaskTest < ActiveSupport::TestCase
     assert_not_includes Task.overdue, task
   end
 
+  test "marks task as completed" do
+    task = @user.tasks.create!(
+      title: "Review checklist",
+      description: "Check the release checklist.",
+      due_at: 1.hour.from_now
+    )
+
+    assert_changes -> { task.reload.completed_at }, from: nil do
+      task.mark_completed!
+    end
+    assert task.completed?
+  end
+
+  test "does not overwrite completed timestamp" do
+    completed_at = 1.hour.ago.change(usec: 0)
+    task = @user.tasks.create!(
+      title: "Review checklist",
+      description: "Check the release checklist.",
+      due_at: 1.hour.from_now,
+      completed_at: completed_at
+    )
+
+    task.mark_completed!
+
+    assert_equal completed_at, task.reload.completed_at
+  end
+
   test "orders tasks by due date" do
     later_task = @user.tasks.create!(
       title: "Later task",

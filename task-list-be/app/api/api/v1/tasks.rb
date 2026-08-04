@@ -15,18 +15,31 @@ module Api
       end
 
       resource :tasks do
-        desc "Open a single task" do
-          success Api::Entities::TaskEntity
-          failure [
-            [ 404, "Not Found", Api::Entities::ErrorEntity ]
-          ]
-        end
         params do
           requires :id, type: Integer, desc: "Task id"
         end
         route_param :id do
+          desc "Open a single task" do
+            success Api::Entities::TaskEntity
+            failure [
+              [ 404, "Not Found", Api::Entities::ErrorEntity ]
+            ]
+          end
           get do
             present find_task, with: Api::Entities::TaskEntity
+          end
+
+          desc "Mark a task as completed" do
+            success Api::Entities::TaskEntity
+            failure [
+              [ 404, "Not Found", Api::Entities::ErrorEntity ]
+            ]
+          end
+          patch :complete do
+            task = find_task
+            task.mark_completed!
+
+            present task, with: Api::Entities::TaskEntity
           end
         end
 

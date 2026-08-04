@@ -12,5 +12,6 @@ class SwaggerDocsTest < ActionDispatch::IntegrationTest
     assert_includes document.fetch("paths"), "/api/v1/health"
     assert_includes document.fetch("paths"), "/api/v1/tasks"
     assert_includes document.fetch("paths"), "/api/v1/tasks/{id}"
+    assert_includes document.fetch("paths"), "/api/v1/tasks/{id}/complete"
   end
 end
