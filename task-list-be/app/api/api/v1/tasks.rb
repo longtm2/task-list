@@ -19,9 +19,25 @@ module Api
         def find_task
           Task.find_by(id: params[:id]) || error!({ errors: { task: [ "not found" ] } }, 404)
         end
+
+        def tasks_collection
+          tasks = Task.ordered_by_due_at
+          tasks = tasks.due_by_end_of_today if declared(params, include_missing: false)[:due_by_today]
+          tasks
+        end
       end
 
       resource :tasks do
+        desc "List all tasks" do
+          success Api::Entities::TaskEntity
+        end
+        params do
+          optional :due_by_today, type: Boolean, desc: "Only include tasks due by the end of today"
+        end
+        get do
+          present tasks_collection, with: Api::Entities::TaskEntity
+        end
+
         params do
           requires :id, type: Integer, desc: "Task id"
         end

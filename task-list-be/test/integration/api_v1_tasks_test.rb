@@ -10,6 +10,54 @@ class ApiV1TasksTest < ActionDispatch::IntegrationTest
     )
   end
 
+  test "lists all tasks sorted by due date" do
+    overdue_task = @user.tasks.create!(
+      title: "Follow up overdue task",
+      description: "Check the task that missed its due date.",
+      due_at: 1.day.ago.change(usec: 0)
+    )
+    today_task = @user.tasks.create!(
+      title: "Finish today's task",
+      description: "Complete the task before the end of today.",
+      due_at: Time.zone.today.end_of_day.change(usec: 0)
+    )
+    future_task = @user.tasks.create!(
+      title: "Prepare future task",
+      description: "Prepare the task due later this week.",
+      due_at: 3.days.from_now.change(usec: 0)
+    )
+
+    get "/api/v1/tasks"
+
+    assert_response :success
+    assert_equal "application/json", response.media_type
+
+    body = JSON.parse(response.body)
+    assert_equal [ overdue_task.id, today_task.id, @task.id, future_task.id ], body.map { |task| task.fetch("id") }
+    assert_equal true, body.find { |task| task.fetch("id") == overdue_task.id }.fetch("overdue")
+    assert_equal false, body.find { |task| task.fetch("id") == today_task.id }.fetch("overdue")
+  end
+
+  test "limits listed tasks to those due by the end of today" do
+    overdue_task = @user.tasks.create!(
+      title: "Follow up overdue task",
+      description: "Check the task that missed its due date.",
+      due_at: 1.day.ago.change(usec: 0)
+    )
+    today_task = @user.tasks.create!(
+      title: "Finish today's task",
+      description: "Complete the task before the end of today.",
+      due_at: Time.zone.today.end_of_day.change(usec: 0)
+    )
+
+    get "/api/v1/tasks", params: { due_by_today: true }
+
+    assert_response :success
+
+    body = JSON.parse(response.body)
+    assert_equal [ overdue_task.id, today_task.id ], body.map { |task| task.fetch("id") }
+  end
+
   test "opens a single task" do
     get "/api/v1/tasks/#{@task.id}"
 
