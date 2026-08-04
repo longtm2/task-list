@@ -1,0 +1,35 @@
+.statePanel {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 64px;
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--muted);
+  background: var(--surface);
+  font-size: 0.875rem;
+}
+
+.statePanel h2 {
+  margin: 0 0 4px;
+  color: var(--text-strong);
+  font-size: 0.9375rem;
+}
+
+.statePanel p {
+  margin: 0;
+}
+
+.statePanelError {
+  border-color: var(--danger-border);
+  background: var(--danger-bg);
+}
+
+@media (max-width: 760px) {
+  .statePanel {
+    align-items: stretch;
+    flex-direction: column;
+  }
+}

@@ -1,0 +1,74 @@
+.taskTableWrap {
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--surface);
+}
+
+.taskTable {
+  width: 100%;
+  min-width: 860px;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+.taskTable th,
+.taskTable td {
+  padding: 9px 12px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text);
+  text-align: left;
+  vertical-align: top;
+}
+
+.taskTable th {
+  color: var(--muted);
+  background: var(--surface-muted);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0;
+}
+
+.taskTable tbody tr:hover {
+  background: var(--row-hover);
+}
+
+.taskTable tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.taskId {
+  width: 96px;
+  color: var(--link);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.taskSummary {
+  min-width: 340px;
+}
+
+.taskStatus {
+  width: 120px;
+}
+
+.taskDate {
+  width: 170px;
+  white-space: nowrap;
+}
+
+.taskSummary strong,
+.taskSummary span {
+  display: block;
+}
+
+.taskSummary strong {
+  color: var(--text-strong);
+  font-weight: 700;
+}
+
+.taskSummary span {
+  margin-top: 2px;
+  color: var(--muted);
+  line-height: 1.35;
+}

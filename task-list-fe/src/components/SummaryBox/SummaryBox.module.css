@@ -1,0 +1,29 @@
+.summaryBox {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  min-width: 0;
+  min-height: 0;
+  padding: 6px 10px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--surface-muted);
+}
+
+.summaryBox span {
+  color: var(--text-strong);
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.summaryBox small {
+  color: var(--muted);
+  font-size: 0.8125rem;
+}
+
+@media (max-width: 760px) {
+  .summaryBox {
+    width: 100%;
+  }
+}
