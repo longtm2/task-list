@@ -8,9 +8,28 @@ module Api
 
           attributes.slice(:user_id, :title, :description, :due_at)
         end
+
+        def find_task
+          Task.find_by(id: params[:id]) || error!({ errors: { task: [ "not found" ] } }, 404)
+        end
       end
 
       resource :tasks do
+        desc "Open a single task" do
+          success Api::Entities::TaskEntity
+          failure [
+            [ 404, "Not Found", Api::Entities::ErrorEntity ]
+          ]
+        end
+        params do
+          requires :id, type: Integer, desc: "Task id"
+        end
+        route_param :id do
+          get do
+            present find_task, with: Api::Entities::TaskEntity
+          end
+        end
+
         desc "Create a task" do
           success Api::Entities::TaskEntity
           failure [

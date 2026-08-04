@@ -3,6 +3,38 @@ require "test_helper"
 class ApiV1TasksTest < ActionDispatch::IntegrationTest
   setup do
     @user = User.create!(name: "Ava Stone", email: "ava@example.com")
+    @task = @user.tasks.create!(
+      title: "Review board packet",
+      description: "Open and review the latest board packet tasks.",
+      due_at: 1.day.from_now.change(usec: 0)
+    )
+  end
+
+  test "opens a single task" do
+    get "/api/v1/tasks/#{@task.id}"
+
+    assert_response :success
+    assert_equal "application/json", response.media_type
+
+    body = JSON.parse(response.body)
+    assert_equal @task.id, body.fetch("id")
+    assert_equal @user.id, body.fetch("user_id")
+    assert_equal "Review board packet", body.fetch("title")
+    assert_equal "Open and review the latest board packet tasks.", body.fetch("description")
+    assert_equal @task.due_at.iso8601, body.fetch("due_at")
+    assert_equal @task.created_at.iso8601, body.fetch("created_at")
+    assert_equal false, body.fetch("completed")
+    assert_equal false, body.fetch("overdue")
+  end
+
+  test "returns not found when opening a missing task" do
+    get "/api/v1/tasks/0"
+
+    assert_response :not_found
+    assert_equal(
+      { "errors" => { "task" => [ "not found" ] } },
+      JSON.parse(response.body)
+    )
   end
 
   test "creates a task" do
