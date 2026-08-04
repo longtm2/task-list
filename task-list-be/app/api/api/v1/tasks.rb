@@ -61,6 +61,16 @@ module Api
             end
           end
 
+          desc "Delete a task" do
+            failure [
+              [ 404, "Not Found", Api::Entities::ErrorEntity ]
+            ]
+          end
+          delete do
+            find_task.destroy!
+            status 204
+          end
+
           desc "Mark a task as completed" do
             success Api::Entities::TaskEntity
             failure [

@@ -124,6 +124,28 @@ class ApiV1TasksTest < ActionDispatch::IntegrationTest
     )
   end
 
+  test "deletes a task" do
+    assert_difference "Task.count", -1 do
+      delete "/api/v1/tasks/#{@task.id}"
+    end
+
+    assert_response :no_content
+    assert_empty response.body
+    assert_nil Task.find_by(id: @task.id)
+  end
+
+  test "returns not found when deleting a missing task" do
+    assert_no_difference "Task.count" do
+      delete "/api/v1/tasks/0"
+    end
+
+    assert_response :not_found
+    assert_equal(
+      { "errors" => { "task" => [ "not found" ] } },
+      JSON.parse(response.body)
+    )
+  end
+
   test "marks a task as completed" do
     patch "/api/v1/tasks/#{@task.id}/complete"
 
