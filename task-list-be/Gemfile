@@ -8,7 +8,10 @@ gem "importmap-rails"
 gem "turbo-rails"
 gem "stimulus-rails"
 gem "jbuilder"
-gem "rswag-api"
+gem "grape"
+gem "grape-entity"
+gem "grape-swagger"
+gem "grape-swagger-entity"
 gem "rswag-ui"
 
 gem "tzinfo-data", platforms: %i[ windows jruby ]

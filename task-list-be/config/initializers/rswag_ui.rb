@@ -1,5 +1,5 @@
 Rswag::Ui.configure do |config|
-  endpoint_path = "/api-docs/v1/swagger.yaml"
+  endpoint_path = "/api/v1/swagger_doc"
 
   if config.respond_to?(:openapi_endpoint)
     config.openapi_endpoint endpoint_path, "Task List API V1"
