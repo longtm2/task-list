@@ -9,6 +9,13 @@ module Api
           attributes.slice(:user_id, :title, :description, :due_at)
         end
 
+        def update_task_params
+          attributes = declared(params, include_missing: false)[:task]
+          error!({ errors: { task: [ "is required" ] } }, 400) unless attributes.respond_to?(:slice)
+
+          attributes.slice(:title, :description, :due_at)
+        end
+
         def find_task
           Task.find_by(id: params[:id]) || error!({ errors: { task: [ "not found" ] } }, 404)
         end
@@ -27,6 +34,31 @@ module Api
           end
           get do
             present find_task, with: Api::Entities::TaskEntity
+          end
+
+          desc "Edit a task" do
+            success Api::Entities::TaskEntity
+            failure [
+              [ 400, "Bad Request", Api::Entities::ErrorEntity ],
+              [ 404, "Not Found", Api::Entities::ErrorEntity ],
+              [ 422, "Validation Error", Api::Entities::ErrorEntity ]
+            ]
+          end
+          params do
+            optional :task, type: Hash, desc: "Task attributes" do
+              optional :title, type: String, desc: "Task title"
+              optional :description, type: String, desc: "Task description"
+              optional :due_at, type: String, desc: "Date and time the task should be completed"
+            end
+          end
+          patch do
+            task = find_task
+
+            if task.update(update_task_params)
+              present task, with: Api::Entities::TaskEntity
+            else
+              error!({ errors: task.errors.to_hash(true) }, 422)
+            end
           end
 
           desc "Mark a task as completed" do
