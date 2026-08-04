@@ -1,31 +1,7 @@
 module Api
   module V1
     class Tasks < Grape::API
-      helpers do
-        def task_params
-          attributes = declared(params, include_missing: false)[:task]
-          error!({ errors: { task: [ "is required" ] } }, 400) unless attributes.respond_to?(:slice)
-
-          attributes.slice(:user_id, :title, :description, :due_at)
-        end
-
-        def update_task_params
-          attributes = declared(params, include_missing: false)[:task]
-          error!({ errors: { task: [ "is required" ] } }, 400) unless attributes.respond_to?(:slice)
-
-          attributes.slice(:title, :description, :due_at)
-        end
-
-        def find_task
-          Task.find_by(id: params[:id]) || error!({ errors: { task: [ "not found" ] } }, 404)
-        end
-
-        def tasks_collection
-          tasks = Task.ordered_by_due_at
-          tasks = tasks.due_by_end_of_today if declared(params, include_missing: false)[:due_by_today]
-          tasks
-        end
-      end
+      helpers Api::V1::Helpers::TaskHelpers
 
       resource :tasks do
         desc "List all tasks" do
@@ -73,7 +49,7 @@ module Api
             if task.update(update_task_params)
               present task, with: Api::Entities::TaskEntity
             else
-              error!({ errors: task.errors.to_hash(true) }, 422)
+              render_validation_errors(task)
             end
           end
 
@@ -117,13 +93,13 @@ module Api
           end
         end
         post do
-          task = Task.new(task_params)
+          task = Task.new(create_task_params)
 
           if task.save
             status :created
             present task, with: Api::Entities::TaskEntity
           else
-            error!({ errors: task.errors.to_hash(true) }, 422)
+            render_validation_errors(task)
           end
         end
       end

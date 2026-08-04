@@ -9,6 +9,11 @@ class Task < ApplicationRecord
   scope :overdue, -> { incomplete.where(due_at: ...Time.current) }
   scope :due_by_end_of_today, -> { where(due_at: ..Time.zone.today.end_of_day) }
 
+  def self.for_list(due_by_today: false)
+    tasks = ordered_by_due_at
+    due_by_today ? tasks.due_by_end_of_today : tasks
+  end
+
   def completed?
     completed_at.present?
   end
