@@ -2,7 +2,8 @@ require "test_helper"
 
 class ApiV1TasksTest < ActionDispatch::IntegrationTest
   setup do
-    @user = User.create!(name: "Ava Stone", email: "ava@example.com")
+    @user = User.create!(name: "Ava Stone", email: "ava@example.com", password: "tasklist123")
+    sign_in(@user)
     @task = @user.tasks.create!(
       title: "Review board packet",
       description: "Open and review the latest board packet tasks.",
@@ -27,7 +28,7 @@ class ApiV1TasksTest < ActionDispatch::IntegrationTest
       due_at: 3.days.from_now.change(usec: 0)
     )
 
-    get "/api/v1/tasks"
+    get "/api/v1/tasks", headers: authentication_headers
 
     assert_response :success
     assert_equal "application/json", response.media_type
@@ -59,7 +60,7 @@ class ApiV1TasksTest < ActionDispatch::IntegrationTest
       due_at: Time.zone.today.end_of_day.change(usec: 0)
     )
 
-    get "/api/v1/tasks", params: { due_by_today: true }
+    get "/api/v1/tasks", params: { due_by_today: true }, headers: authentication_headers
 
     assert_response :success
 
@@ -78,7 +79,7 @@ class ApiV1TasksTest < ActionDispatch::IntegrationTest
       )
     end
 
-    get "/api/v1/tasks", params: { page: 2, per_page: 5 }
+    get "/api/v1/tasks", params: { page: 2, per_page: 5 }, headers: authentication_headers
 
     assert_response :success
 
@@ -95,7 +96,7 @@ class ApiV1TasksTest < ActionDispatch::IntegrationTest
   end
 
   test "opens a single task" do
-    get "/api/v1/tasks/#{@task.id}"
+    get "/api/v1/tasks/#{@task.id}", headers: authentication_headers
 
     assert_response :success
     assert_equal "application/json", response.media_type
@@ -107,12 +108,14 @@ class ApiV1TasksTest < ActionDispatch::IntegrationTest
     assert_equal "Open and review the latest board packet tasks.", body.fetch("description")
     assert_equal @task.due_at.iso8601, body.fetch("due_at")
     assert_equal @task.created_at.iso8601, body.fetch("created_at")
+    assert_equal @user.id, body.fetch("created_by").fetch("id")
+    assert_nil body.fetch("completed_by")
     assert_equal false, body.fetch("completed")
     assert_equal false, body.fetch("overdue")
   end
 
   test "returns not found when opening a missing task" do
-    get "/api/v1/tasks/0"
+    get "/api/v1/tasks/0", headers: authentication_headers
 
     assert_response :not_found
     assert_equal(
@@ -130,7 +133,7 @@ class ApiV1TasksTest < ActionDispatch::IntegrationTest
         description: "Review the updated packet and confirm due-date changes.",
         due_at: due_at.iso8601
       }
-    }, as: :json
+    }, as: :json, headers: authentication_headers
 
     assert_response :success
     assert_equal "application/json", response.media_type
@@ -149,7 +152,7 @@ class ApiV1TasksTest < ActionDispatch::IntegrationTest
   end
 
   test "does not allow editing task user" do
-    other_user = User.create!(name: "Minh Tran", email: "minh@example.com")
+    other_user = User.create!(name: "Minh Tran", email: "minh@example.com", password: "tasklist123")
 
     patch "/api/v1/tasks/#{@task.id}", params: {
       task: {
@@ -158,7 +161,7 @@ class ApiV1TasksTest < ActionDispatch::IntegrationTest
         description: "Confirm the task owner cannot be changed through update.",
         due_at: 2.days.from_now.iso8601
       }
-    }, as: :json
+    }, as: :json, headers: authentication_headers
 
     assert_response :success
     assert_equal @user.id, @task.reload.user_id
@@ -172,7 +175,7 @@ class ApiV1TasksTest < ActionDispatch::IntegrationTest
         description: "",
         due_at: ""
       }
-    }, as: :json
+    }, as: :json, headers: authentication_headers
 
     assert_response :unprocessable_entity
 
@@ -183,7 +186,7 @@ class ApiV1TasksTest < ActionDispatch::IntegrationTest
   end
 
   test "requires task params when editing a task" do
-    patch "/api/v1/tasks/#{@task.id}", params: {}, as: :json
+    patch "/api/v1/tasks/#{@task.id}", params: {}, as: :json, headers: authentication_headers
 
     assert_response :bad_request
     assert_equal(
@@ -199,7 +202,7 @@ class ApiV1TasksTest < ActionDispatch::IntegrationTest
         description: "This task does not exist.",
         due_at: 1.day.from_now.iso8601
       }
-    }, as: :json
+    }, as: :json, headers: authentication_headers
 
     assert_response :not_found
     assert_equal(
@@ -210,7 +213,7 @@ class ApiV1TasksTest < ActionDispatch::IntegrationTest
 
   test "deletes a task" do
     assert_difference "Task.count", -1 do
-      delete "/api/v1/tasks/#{@task.id}"
+      delete "/api/v1/tasks/#{@task.id}", headers: authentication_headers
     end
 
     assert_response :no_content
@@ -220,7 +223,7 @@ class ApiV1TasksTest < ActionDispatch::IntegrationTest
 
   test "returns not found when deleting a missing task" do
     assert_no_difference "Task.count" do
-      delete "/api/v1/tasks/0"
+      delete "/api/v1/tasks/0", headers: authentication_headers
     end
 
     assert_response :not_found
@@ -231,7 +234,7 @@ class ApiV1TasksTest < ActionDispatch::IntegrationTest
   end
 
   test "marks a task as completed" do
-    patch "/api/v1/tasks/#{@task.id}/complete"
+    patch "/api/v1/tasks/#{@task.id}/complete", headers: authentication_headers
 
     assert_response :success
     assert_equal "application/json", response.media_type
@@ -244,10 +247,11 @@ class ApiV1TasksTest < ActionDispatch::IntegrationTest
     assert_equal true, body.fetch("completed")
     assert_equal false, body.fetch("overdue")
     assert_equal task.completed_at.iso8601, body.fetch("completed_at")
+    assert_equal @user.id, body.fetch("completed_by").fetch("id")
   end
 
   test "returns not found when completing a missing task" do
-    patch "/api/v1/tasks/0/complete"
+    patch "/api/v1/tasks/0/complete", headers: authentication_headers
 
     assert_response :not_found
     assert_equal(
@@ -262,12 +266,11 @@ class ApiV1TasksTest < ActionDispatch::IntegrationTest
     assert_difference "Task.count", 1 do
       post "/api/v1/tasks", params: {
         task: {
-          user_id: @user.id,
           title: "Prepare weekly priorities",
           description: "Create the task priority list for the team meeting.",
           due_at: due_at.iso8601
         }
-      }, as: :json
+      }, as: :json, headers: authentication_headers
     end
 
     assert_response :created
@@ -281,7 +284,9 @@ class ApiV1TasksTest < ActionDispatch::IntegrationTest
     assert_equal "Create the task priority list for the team meeting.", body.fetch("description")
     assert_equal task.due_at.iso8601, body.fetch("due_at")
     assert_equal task.created_at.iso8601, body.fetch("created_at")
+    assert_equal @user.id, body.fetch("created_by").fetch("id")
     assert_nil body.fetch("completed_at")
+    assert_nil body.fetch("completed_by")
     assert_equal false, body.fetch("completed")
     assert_equal false, body.fetch("overdue")
   end
@@ -290,12 +295,11 @@ class ApiV1TasksTest < ActionDispatch::IntegrationTest
     assert_no_difference "Task.count" do
       post "/api/v1/tasks", params: {
         task: {
-          user_id: @user.id,
           title: "",
           description: "",
           due_at: ""
         }
-      }, as: :json
+      }, as: :json, headers: authentication_headers
     end
 
     assert_response :unprocessable_entity
@@ -308,7 +312,7 @@ class ApiV1TasksTest < ActionDispatch::IntegrationTest
 
   test "requires task params" do
     assert_no_difference "Task.count" do
-      post "/api/v1/tasks", params: {}, as: :json
+      post "/api/v1/tasks", params: {}, as: :json, headers: authentication_headers
     end
 
     assert_response :bad_request
@@ -316,5 +320,84 @@ class ApiV1TasksTest < ActionDispatch::IntegrationTest
       { "errors" => { "task" => [ "is required" ] } },
       JSON.parse(response.body)
     )
+  end
+
+  test "scopes tasks to the authenticated user" do
+    other_user = User.create!(name: "Minh Tran", email: "minh@example.com", password: "tasklist123")
+    other_task = other_user.tasks.create!(
+      title: "Private task",
+      description: "This task must not be exposed to another user.",
+      due_at: 1.hour.from_now
+    )
+
+    get "/api/v1/tasks", headers: authentication_headers
+
+    assert_response :success
+    assert_equal [ @task.id ], JSON.parse(response.body).fetch("tasks").map { |task| task.fetch("id") }
+
+    get "/api/v1/tasks/#{other_task.id}", headers: authentication_headers
+
+    assert_response :not_found
+  end
+
+  test "filters tasks by status, due date and text query" do
+    matching_task = @user.tasks.create!(
+      title: "Prepare release checklist",
+      description: "Review the release evidence before deployment.",
+      due_at: 2.days.from_now
+    )
+    @user.tasks.create!(
+      title: "Finished task",
+      description: "Already completed work.",
+      due_at: 2.days.from_now,
+      completed_at: Time.current
+    )
+
+    get "/api/v1/tasks", params: {
+      due_from: 1.day.from_now.to_date,
+      due_to: 3.days.from_now.to_date,
+      query: "release",
+      status: "open"
+    }, headers: authentication_headers
+
+    assert_response :success
+    assert_equal [ matching_task.id ], JSON.parse(response.body).fetch("tasks").map { |task| task.fetch("id") }
+  end
+
+  test "uploads, lists and deletes a supporting file" do
+    upload = Rack::Test::UploadedFile.new(file_fixture("supporting-notes.txt"), "text/plain")
+
+    assert_difference "ActiveStorage::Attachment.count", 1 do
+      post "/api/v1/tasks/#{@task.id}/attachments", params: { file: upload }, headers: authentication_headers
+    end
+
+    assert_response :success
+    attachment = JSON.parse(response.body)
+    assert_equal "supporting-notes.txt", attachment.fetch("filename")
+
+    get "/api/v1/tasks/#{@task.id}", headers: authentication_headers
+
+    assert_response :success
+    assert_equal [ attachment.fetch("id") ], JSON.parse(response.body).fetch("attachments").map { |item| item.fetch("id") }
+
+    get attachment.fetch("download_url"), headers: authentication_headers
+
+    assert_response :redirect
+
+    assert_difference "ActiveStorage::Attachment.count", -1 do
+      delete "/api/v1/tasks/#{@task.id}/attachments/#{attachment.fetch("id")}", headers: authentication_headers
+    end
+
+    assert_response :no_content
+  end
+
+  private
+
+  def authentication_headers
+    {}
+  end
+
+  def sign_in(user)
+    post "/api/v1/auth/login", params: { email: user.email, password: "tasklist123" }, as: :json
   end
 end

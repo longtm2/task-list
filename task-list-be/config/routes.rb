@@ -1,4 +1,6 @@
 Rails.application.routes.draw do
+  devise_for :users, skip: :all
+
   mount Rswag::Ui::Engine => "/api-docs"
   mount Api::Root => "/"
 

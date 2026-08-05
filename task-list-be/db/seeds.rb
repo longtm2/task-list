@@ -9,6 +9,10 @@ users.each_value do |attributes|
   end
 end
 
+User.find_each do |user|
+  user.update!(password: "tasklist123") unless user.encrypted_password.present?
+end
+
 ava = User.find_by!(email: "ava.stone@boardpackager.example")
 minh = User.find_by!(email: "minh.tran@boardpackager.example")
 time_on = ->(date, hour) { Time.zone.local(date.year, date.month, date.day, hour) }
@@ -34,7 +38,8 @@ tasks = [
     title: "Review completed onboarding checklist",
     description: "Confirm the checklist items completed last week.",
     due_at: time_on.call(1.day.ago.to_date, 15),
-    completed_at: time_on.call(1.day.ago.to_date, 14)
+    completed_at: time_on.call(1.day.ago.to_date, 14),
+    completed_by: ava
   },
   {
     user: minh,

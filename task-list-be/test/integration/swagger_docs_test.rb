@@ -10,9 +10,11 @@ class SwaggerDocsTest < ActionDispatch::IntegrationTest
     document = JSON.parse(response.body)
     assert_equal "2.0", document.fetch("swagger")
     assert_includes document.fetch("paths"), "/api/v1/health"
+    assert_includes document.fetch("paths"), "/api/v1/auth/login"
     assert_includes document.fetch("paths"), "/api/v1/tasks"
     assert_includes document.fetch("paths"), "/api/v1/tasks/{id}"
     assert_includes document.fetch("paths"), "/api/v1/tasks/{id}/complete"
+    assert_includes document.fetch("paths"), "/api/v1/tasks/{id}/attachments"
     assert_includes document.fetch("paths").fetch("/api/v1/tasks"), "get"
     assert_includes document.fetch("paths").fetch("/api/v1/tasks/{id}"), "delete"
   end

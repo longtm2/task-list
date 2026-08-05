@@ -2,7 +2,8 @@ module Api
   module V1
     module Helpers
       module TaskHelpers
-        CREATE_ATTRIBUTES = %i[user_id title description due_at].freeze
+        CREATE_ATTRIBUTES = %i[title description due_at].freeze
+        MAXIMUM_ATTACHMENT_SIZE = 10.megabytes
         UPDATE_ATTRIBUTES = %i[title description due_at].freeze
 
         def create_task_params
@@ -14,7 +15,18 @@ module Api
         end
 
         def find_task
-          Task.find_by(id: params[:id]) || render_error(:task, "not found", 404)
+          current_user.tasks.with_attached_attachments.includes(:created_by, :completed_by).find_by(id: params[:id]) || render_error(:task, "not found", 404)
+        end
+
+        def find_attachment(task)
+          task.attachments_attachments.find_by(id: params[:attachment_id]) || render_error(:attachment, "not found", 404)
+        end
+
+        def supporting_file
+          uploaded_file = params.fetch(:file)
+          return uploaded_file if uploaded_file.fetch(:tempfile).size <= MAXIMUM_ATTACHMENT_SIZE
+
+          render_error(:file, "must be 10 MB or smaller", 422)
         end
 
         def render_validation_errors(record)
@@ -22,7 +34,7 @@ module Api
         end
 
         def tasks_collection
-          Task.for_list(due_by_today: declared(params, include_missing: false)[:due_by_today])
+          current_user.tasks.for_list(**task_list_filters)
         end
 
         def paginated_tasks_collection
@@ -49,6 +61,14 @@ module Api
 
         def permitted_task_params(attributes)
           task_attributes.slice(*attributes)
+        end
+
+        def task_list_filters
+          declared(params, include_missing: false)
+            .slice(:due_by_today, :due_from, :due_to, :query, :status)
+            .each_with_object({}) do |(key, value), filters|
+              filters[key.to_sym] = value
+            end
         end
 
         def task_attributes

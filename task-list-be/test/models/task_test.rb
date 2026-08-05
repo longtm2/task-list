@@ -2,7 +2,7 @@ require "test_helper"
 
 class TaskTest < ActiveSupport::TestCase
   setup do
-    @user = User.create!(name: "Ava Stone", email: "ava@example.com")
+    @user = User.create!(name: "Ava Stone", email: "ava@example.com", password: "tasklist123")
   end
 
   test "detects overdue incomplete tasks" do
@@ -21,7 +21,8 @@ class TaskTest < ActiveSupport::TestCase
       title: "Review checklist",
       description: "Check the release checklist.",
       due_at: 1.hour.ago,
-      completed_at: Time.current
+      completed_at: Time.current,
+      completed_by: @user
     )
 
     assert task.completed?
@@ -37,9 +38,10 @@ class TaskTest < ActiveSupport::TestCase
     )
 
     assert_changes -> { task.reload.completed_at }, from: nil do
-      task.mark_completed!
+      task.mark_completed!(completed_by: @user)
     end
     assert task.completed?
+    assert_equal @user, task.completed_by
   end
 
   test "does not overwrite completed timestamp" do
@@ -48,12 +50,15 @@ class TaskTest < ActiveSupport::TestCase
       title: "Review checklist",
       description: "Check the release checklist.",
       due_at: 1.hour.from_now,
-      completed_at: completed_at
+      completed_at: completed_at,
+      completed_by: @user
     )
 
-    task.mark_completed!
+    another_user = User.create!(name: "Minh Tran", email: "minh@example.com", password: "tasklist123")
+    task.mark_completed!(completed_by: another_user)
 
     assert_equal completed_at, task.reload.completed_at
+    assert_equal @user, task.completed_by
   end
 
   test "orders tasks by due date" do

@@ -1,13 +1,16 @@
 class User < ApplicationRecord
+  devise :database_authenticatable, :validatable
+
   has_many :tasks, dependent: :destroy
+  has_many :completed_tasks,
+    class_name: "Task",
+    foreign_key: :completed_by_id,
+    inverse_of: :completed_by,
+    dependent: :nullify
 
   before_validation :normalize_email
 
   validates :name, presence: true
-  validates :email,
-    presence: true,
-    uniqueness: { case_sensitive: false },
-    format: { with: URI::MailTo::EMAIL_REGEXP }
 
   private
 

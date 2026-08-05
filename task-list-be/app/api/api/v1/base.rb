@@ -14,11 +14,12 @@ module Api
       end
 
       mount Api::V1::Health
+      mount Api::V1::Auth
       mount Api::V1::Tasks
 
       add_swagger_documentation(
         api_version: "v1",
-        consumes: [ "application/json" ],
+        consumes: [ "application/json", "multipart/form-data" ],
         doc_version: "v1",
         hide_documentation_path: true,
         hide_format: true,
