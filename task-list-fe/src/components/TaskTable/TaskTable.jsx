@@ -1,6 +1,7 @@
 import StatusBadge from '../StatusBadge/StatusBadge'
 import { formatDateTime } from '../../utils/dateTime'
 import { taskStatus } from '../../utils/taskStatus'
+import { taskUserName } from '../../utils/taskUser'
 import styles from './TaskTable.module.css'
 
 export default function TaskTable({ onOpenTask, selectedTaskId, tasks }) {
@@ -13,6 +14,8 @@ export default function TaskTable({ onOpenTask, selectedTaskId, tasks }) {
             <th scope="col">Subject</th>
             <th scope="col">Status</th>
             <th scope="col">Due date</th>
+            <th scope="col">Created by</th>
+            <th scope="col">Files</th>
             <th scope="col">Created</th>
           </tr>
         </thead>
@@ -40,6 +43,8 @@ export default function TaskTable({ onOpenTask, selectedTaskId, tasks }) {
                   <StatusBadge status={taskStatus(task)} />
                 </td>
                 <td className={styles.taskDate}>{formatDateTime(task.due_at)}</td>
+                <td className={styles.taskUser}>{taskUserName(task.created_by)}</td>
+                <td className={styles.taskAttachments}>{task.attachments?.length || 0}</td>
                 <td className={styles.taskDate}>{formatDateTime(task.created_at)}</td>
               </tr>
             )

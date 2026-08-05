@@ -16,7 +16,7 @@ function assertTasksCollectionResponse(data) {
   return data
 }
 
-export async function getTasks({ dueByToday, page, perPage, signal } = {}) {
+export async function getTasks({ dueByToday, dueFrom, dueTo, page, perPage, query, signal, status } = {}) {
   const params = {
     page,
     per_page: perPage,
@@ -25,6 +25,11 @@ export async function getTasks({ dueByToday, page, perPage, signal } = {}) {
   if (dueByToday) {
     params.due_by_today = true
   }
+
+  if (dueFrom) params.due_from = dueFrom
+  if (dueTo) params.due_to = dueTo
+  if (query) params.query = query
+  if (status) params.status = status
 
   const response = await httpClient.get('/v1/tasks', {
     params,
@@ -64,4 +69,17 @@ export async function completeTask(taskId) {
 
 export async function deleteTask(taskId) {
   await httpClient.delete(`/v1/tasks/${taskId}`)
+}
+
+export async function uploadTaskAttachment(taskId, file) {
+  const formData = new FormData()
+  formData.append('file', file)
+
+  const response = await httpClient.post(`/v1/tasks/${taskId}/attachments`, formData)
+
+  return assertTaskResponse(response.data)
+}
+
+export async function deleteTaskAttachment(taskId, attachmentId) {
+  await httpClient.delete(`/v1/tasks/${taskId}/attachments/${attachmentId}`)
 }

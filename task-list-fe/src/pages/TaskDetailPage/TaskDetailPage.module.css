@@ -66,7 +66,7 @@
 
 .metaList div {
   display: grid;
-  grid-template-columns: 92px minmax(0, 1fr);
+  grid-template-columns: 110px minmax(0, 1fr);
   gap: 10px;
 }
 
@@ -101,16 +101,6 @@
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-}
-
-.actionError {
-  margin: 0 0 12px;
-  padding: 8px 10px;
-  border: 1px solid var(--danger-border);
-  border-radius: 3px;
-  color: var(--danger);
-  background: var(--danger-bg);
-  font-weight: 600;
 }
 
 @media (max-width: 760px) {

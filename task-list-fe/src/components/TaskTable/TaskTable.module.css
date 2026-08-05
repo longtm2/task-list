@@ -7,7 +7,7 @@
 
 .taskTable {
   width: 100%;
-  min-width: 860px;
+  min-width: 980px;
   border-collapse: collapse;
   font-size: 0.875rem;
 }
@@ -72,6 +72,17 @@
 .taskDate {
   width: 170px;
   white-space: nowrap;
+}
+
+.taskAttachments {
+  color: var(--muted);
+  font-weight: 700;
+  text-align: center;
+}
+
+.taskUser {
+  min-width: 120px;
+  color: var(--text);
 }
 
 .taskSummary strong,

@@ -12,7 +12,7 @@ const DEFAULT_PAGINATION = {
   total_pages: 0,
 }
 
-export function useTasks({ dueByToday, page, perPage }) {
+export function useTasks({ dueByToday, dueFrom, dueTo, page, perPage, query, status }) {
   const [tasks, setTasks] = useState([])
   const [pagination, setPagination] = useState(DEFAULT_PAGINATION)
   const [requestState, setRequestState] = useState('loading')
@@ -27,9 +27,13 @@ export function useTasks({ dueByToday, page, perPage }) {
       try {
         const loadedTasks = await getTasks({
           dueByToday,
+          dueFrom,
+          dueTo,
           page,
           perPage,
+          query,
           signal,
+          status,
         })
 
         setTasks(loadedTasks.tasks)
@@ -44,7 +48,7 @@ export function useTasks({ dueByToday, page, perPage }) {
         setRequestState('error')
       }
     },
-    [dueByToday, page, perPage],
+    [dueByToday, dueFrom, dueTo, page, perPage, query, status],
   )
 
   const reload = useCallback(() => {

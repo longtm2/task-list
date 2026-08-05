@@ -23,10 +23,10 @@ export function ErrorState({ message, onRetry }) {
   )
 }
 
-export function EmptyState({ dueByToday }) {
+export function EmptyState({ isFiltered }) {
   return (
     <section className={styles.statePanel}>
-      {dueByToday ? 'No tasks are due by the end of today.' : 'No tasks have been created yet.'}
+      {isFiltered ? 'No tasks match the current filters.' : 'No tasks have been created yet.'}
     </section>
   )
 }

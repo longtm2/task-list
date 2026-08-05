@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { toast } from 'react-toastify'
 import Button from '../../components/Button/Button'
 import StatusBadge from '../../components/StatusBadge/StatusBadge'
+import TaskAttachments from '../../components/TaskAttachments/TaskAttachments'
 import TaskForm from '../../components/TaskForm/TaskForm'
 import { ErrorState, LoadingState } from '../../components/TaskListState/TaskListState'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
@@ -9,6 +10,7 @@ import { useTask } from '../../hooks/useTask'
 import { useRouter } from '../../router/router'
 import { formatDateTime } from '../../utils/dateTime'
 import { taskStatus } from '../../utils/taskStatus'
+import { taskUserName } from '../../utils/taskUser'
 import styles from './TaskDetailPage.module.css'
 
 export default function TaskDetailPage({ taskId }) {
@@ -18,12 +20,14 @@ export default function TaskDetailPage({ taskId }) {
     actionErrorMessage,
     actionState,
     completeTask,
+    deleteAttachment,
     deleteTask,
     errorMessage,
     reload,
     requestState,
     task,
     updateTask,
+    uploadAttachment,
   } = useTask(taskId)
   const isSaving = actionState === 'saving'
   const titlePrefix = task ? `TASK-${task.id}` : 'Task detail'
@@ -54,6 +58,18 @@ export default function TaskDetailPage({ taskId }) {
     await deleteTask()
     toast.success(`TASK-${task.id} deleted`)
     navigate('/tasks')
+  }
+
+  async function handleUploadAttachment(file) {
+    const attachment = await uploadAttachment(file)
+
+    toast.success(`${attachment.filename} uploaded`)
+  }
+
+  async function handleDeleteAttachment(attachment) {
+    await deleteAttachment(attachment.id)
+
+    toast.success(`${attachment.filename} deleted`)
   }
 
   return (
@@ -106,6 +122,14 @@ export default function TaskDetailPage({ taskId }) {
               <dt>Updated</dt>
               <dd>{formatDateTime(task.updated_at)}</dd>
             </div>
+            <div>
+              <dt>Created by</dt>
+              <dd>{taskUserName(task.created_by)}</dd>
+            </div>
+            <div>
+              <dt>Completed by</dt>
+              <dd>{taskUserName(task.completed_by, 'Not completed')}</dd>
+            </div>
           </dl>
 
           <section className={styles.description}>
@@ -113,7 +137,13 @@ export default function TaskDetailPage({ taskId }) {
             <p>{task.description}</p>
           </section>
 
-          {actionErrorMessage && <p className={styles.actionError}>{actionErrorMessage}</p>}
+          <TaskAttachments
+            actionErrorMessage={actionErrorMessage}
+            attachments={task.attachments || []}
+            isSaving={isSaving}
+            onDelete={handleDeleteAttachment}
+            onUpload={handleUploadAttachment}
+          />
 
           <div className={styles.actions}>
             <Button type="button" variant="primary" disabled={isSaving} onClick={() => setIsEditing(true)}>

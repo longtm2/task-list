@@ -7,8 +7,6 @@ import { createTask } from '../../services/tasksService'
 import { resolveApiErrorMessage } from '../../utils/apiErrors'
 import styles from './CreateTaskPage.module.css'
 
-const DEFAULT_USER_ID = 1
-
 export default function CreateTaskPage() {
   const { navigate } = useRouter()
   const [actionState, setActionState] = useState('idle')
@@ -22,10 +20,7 @@ export default function CreateTaskPage() {
     setActionErrorMessage('')
 
     try {
-      const createdTask = await createTask({
-        user_id: DEFAULT_USER_ID,
-        ...taskAttributes,
-      })
+      const createdTask = await createTask(taskAttributes)
 
       toast.success(`TASK-${createdTask.id} created`)
       navigate(`/tasks/${createdTask.id}`)

@@ -2,8 +2,10 @@ import { useCallback, useEffect, useState } from 'react'
 import { CanceledError } from 'axios'
 import {
   completeTask as completeTaskRequest,
+  deleteTaskAttachment as deleteTaskAttachmentRequest,
   deleteTask as deleteTaskRequest,
   getTask,
+  uploadTaskAttachment as uploadTaskAttachmentRequest,
   updateTask as updateTaskRequest,
 } from '../services/tasksService'
 import { resolveApiErrorMessage } from '../utils/apiErrors'
@@ -94,15 +96,55 @@ export function useTask(taskId) {
     }
   }, [taskId])
 
+  const uploadAttachment = useCallback(async (file) => {
+    setActionState('saving')
+    setActionErrorMessage('')
+
+    try {
+      const attachment = await uploadTaskAttachmentRequest(taskId, file)
+
+      setTask((currentTask) => ({
+        ...currentTask,
+        attachments: [ ...(currentTask.attachments || []), attachment ],
+      }))
+      return attachment
+    } catch (error) {
+      setActionErrorMessage(resolveApiErrorMessage(error))
+      throw error
+    } finally {
+      setActionState('idle')
+    }
+  }, [taskId])
+
+  const deleteAttachment = useCallback(async (attachmentId) => {
+    setActionState('saving')
+    setActionErrorMessage('')
+
+    try {
+      await deleteTaskAttachmentRequest(taskId, attachmentId)
+      setTask((currentTask) => ({
+        ...currentTask,
+        attachments: (currentTask.attachments || []).filter((attachment) => attachment.id !== attachmentId),
+      }))
+    } catch (error) {
+      setActionErrorMessage(resolveApiErrorMessage(error))
+      throw error
+    } finally {
+      setActionState('idle')
+    }
+  }, [taskId])
+
   return {
     actionErrorMessage,
     actionState,
     completeTask,
+    deleteAttachment,
     deleteTask,
     errorMessage,
     reload: loadTask,
     requestState,
     task,
     updateTask,
+    uploadAttachment,
   }
 }

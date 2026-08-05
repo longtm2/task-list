@@ -1,4 +1,6 @@
+import { useMemo } from 'react'
 import SummaryBox from '../../components/SummaryBox/SummaryBox'
+import TaskFilters from '../../components/TaskFilters/TaskFilters'
 import TaskPagination from '../../components/TaskPagination/TaskPagination'
 import TaskTable from '../../components/TaskTable/TaskTable'
 import TaskListToolbar from '../../components/TaskListToolbar/TaskListToolbar'
@@ -10,6 +12,7 @@ import styles from './TasksListPage.module.css'
 
 const DEFAULT_PAGE = 1
 const DEFAULT_PER_PAGE = 10
+const TASK_STATUSES = new Set(['open', 'completed', 'overdue'])
 
 function parsePositiveInt(value, fallback) {
   const parsedValue = Number(value)
@@ -19,18 +22,34 @@ function parsePositiveInt(value, fallback) {
   return parsedValue
 }
 
+function parseStatus(value) {
+  return TASK_STATUSES.has(value) ? value : ''
+}
+
 export default function TasksListPage() {
   const { location, navigate } = useRouter()
   const searchParams = new URLSearchParams(location.search)
   const dueByToday = searchParams.get('due_by_today') === 'true'
+  const dueFrom = searchParams.get('due_from') || ''
+  const dueTo = searchParams.get('due_to') || ''
   const page = parsePositiveInt(searchParams.get('page'), DEFAULT_PAGE)
   const perPage = parsePositiveInt(searchParams.get('per_page'), DEFAULT_PER_PAGE)
-  const { errorMessage, pagination, reload, requestState, tasks } = useTasks({
+  const query = searchParams.get('query') || ''
+  const status = parseStatus(searchParams.get('status'))
+  const filters = useMemo(() => ({
     dueByToday,
+    dueFrom,
+    dueTo,
+    query,
+    status,
+  }), [dueByToday, dueFrom, dueTo, query, status])
+  const { errorMessage, pagination, reload, requestState, tasks } = useTasks({
+    ...filters,
     page,
     perPage,
   })
   const isLoading = requestState === 'loading'
+  const isFiltered = dueByToday || Boolean(dueFrom || dueTo || query || status)
 
   useDocumentTitle('Tasks | Task list project')
 
@@ -50,10 +69,25 @@ export default function TasksListPage() {
     navigate(queryString ? `/tasks?${queryString}` : '/tasks')
   }
 
-  function handleDueByTodayChange(checked) {
+  function handleFiltersApply(nextFilters) {
     updateTaskListParams({
-      due_by_today: checked ? 'true' : false,
+      due_by_today: nextFilters.dueByToday ? 'true' : false,
+      due_from: nextFilters.dueFrom,
+      due_to: nextFilters.dueTo,
       page: DEFAULT_PAGE,
+      query: nextFilters.query,
+      status: nextFilters.status,
+    })
+  }
+
+  function handleFiltersClear() {
+    updateTaskListParams({
+      due_by_today: false,
+      due_from: false,
+      due_to: false,
+      page: DEFAULT_PAGE,
+      query: false,
+      status: false,
     })
   }
 
@@ -78,21 +112,26 @@ export default function TasksListPage() {
         </div>
         <SummaryBox
           count={pagination.total_count}
-          label={dueByToday ? 'Due by today' : 'Total tasks'}
+          label={isFiltered ? 'Filtered tasks' : 'Total tasks'}
         />
       </header>
 
-      <TaskListToolbar
-        dueByToday={dueByToday}
+      <TaskFilters
+        key={location.search}
+        filters={filters}
         isLoading={isLoading}
-        onDueByTodayChange={handleDueByTodayChange}
+        onApply={handleFiltersApply}
+        onClear={handleFiltersClear}
+      />
+      <TaskListToolbar
+        isLoading={isLoading}
         onNewTask={() => navigate('/tasks/new')}
         onRefresh={reload}
       />
 
       {isLoading && <LoadingState />}
       {requestState === 'error' && <ErrorState message={errorMessage} onRetry={reload} />}
-      {requestState === 'success' && tasks.length === 0 && <EmptyState dueByToday={dueByToday} />}
+      {requestState === 'success' && tasks.length === 0 && <EmptyState isFiltered={isFiltered} />}
       {requestState === 'success' && tasks.length > 0 && (
         <TaskTable onOpenTask={(taskId) => navigate(`/tasks/${taskId}`)} tasks={tasks} />
       )}
