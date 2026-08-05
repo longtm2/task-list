@@ -1,5 +1,8 @@
 import { useEffect } from 'react'
+import { useAuth } from './auth/useAuth'
+import AppHeader from './components/AppHeader/AppHeader'
 import CreateTaskPage from './pages/CreateTaskPage/CreateTaskPage'
+import LoginPage from './pages/LoginPage/LoginPage'
 import TaskDetailPage from './pages/TaskDetailPage/TaskDetailPage'
 import TasksListPage from './pages/TasksListPage/TasksListPage'
 import { useRouter } from './router/router'
@@ -13,19 +16,28 @@ function matchTaskDetail(pathname) {
 
 export default function App() {
   const { location, navigate } = useRouter()
+  const { status } = useAuth()
   const taskId = matchTaskDetail(location.pathname)
-  const isKnownRoute = location.pathname === '/tasks' || location.pathname === '/tasks/new' || taskId
-  const shouldRedirectToTasks = location.pathname === '/' || !isKnownRoute
+  const isLoginPage = location.pathname === '/login'
+  const isKnownPrivateRoute = location.pathname === '/tasks' || location.pathname === '/tasks/new' || taskId
+  const isAuthenticated = status === 'authenticated'
+  const shouldRedirect = status !== 'loading' && (
+    (!isAuthenticated && !isLoginPage) ||
+    (isAuthenticated && (isLoginPage || !isKnownPrivateRoute))
+  )
 
   useEffect(() => {
-    if (shouldRedirectToTasks) {
-      navigate('/tasks', { replace: true })
+    if (shouldRedirect) {
+      navigate(isAuthenticated ? '/tasks' : '/login', { replace: true })
     }
-  }, [navigate, shouldRedirectToTasks])
+  }, [isAuthenticated, navigate, shouldRedirect])
 
-  if (shouldRedirectToTasks) {
-    return null
+  if (status === 'loading') {
+    return <div className="session-state">Checking session</div>
   }
+
+  if (shouldRedirect) return null
+  if (!isAuthenticated) return <LoginPage />
 
   let page = <TasksListPage />
 
@@ -35,5 +47,10 @@ export default function App() {
     page = <TaskDetailPage taskId={taskId} />
   }
 
-  return <div className="app-root">{page}</div>
+  return (
+    <div className="app-root">
+      <AppHeader />
+      {page}
+    </div>
+  )
 }

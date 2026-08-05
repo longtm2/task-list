@@ -1,0 +1,53 @@
+.header {
+  display: flex;
+  min-height: 52px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 8px max(24px, calc((100% - 1180px) / 2));
+  border-bottom: 1px solid #0747a6;
+  color: #ffffff;
+  background: #0747a6;
+}
+
+.brand {
+  padding: 0;
+  border: 0;
+  color: inherit;
+  background: transparent;
+  font: inherit;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.account {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.account div {
+  display: grid;
+  justify-items: end;
+  gap: 1px;
+  font-size: 0.75rem;
+}
+
+.account strong {
+  font-size: 0.8125rem;
+}
+
+.account span {
+  color: #deebff;
+}
+
+@media (max-width: 760px) {
+  .header {
+    padding: 8px 16px;
+  }
+
+  .account div {
+    display: none;
+  }
+}

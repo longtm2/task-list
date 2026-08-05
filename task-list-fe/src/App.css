@@ -1,3 +1,11 @@
 .app-root {
   min-height: 100vh;
 }
+
+.session-state {
+  display: grid;
+  min-height: 100vh;
+  place-items: center;
+  color: var(--muted);
+  font-weight: 700;
+}

@@ -13,4 +13,15 @@ const httpClient = axios.create({
   },
 })
 
+httpClient.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      window.dispatchEvent(new Event('task-list:unauthenticated'))
+    }
+
+    return Promise.reject(error)
+  },
+)
+
 export default httpClient
